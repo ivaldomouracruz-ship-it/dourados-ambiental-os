@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Histórico · {{ cliente.nome_razao_social }}{% endblock %}
+{% block content %}
+<h1>Histórico — {{ cliente.nome_razao_social }}</h1>
+
+<div class="bloco-secao" style="border-radius:8px; border-top:1px solid var(--cinza-borda);">
+    <div class="campo-view"><b>CNPJ / CPF:</b> {{ cliente.cnpj_cpf or '—' }}</div>
+    <div class="campo-view"><b>Telefone:</b> {{ cliente.telefone or '—' }}</div>
+    <div class="campo-view"><b>E-mail:</b> {{ cliente.email or '—' }}</div>
+    <div class="campo-view"><b>Endereço:</b> {{ cliente.endereco or '—' }}</div>
+    <div class="campo-view"><b>Segmento:</b> {{ cliente.segmento or '—' }}</div>
+</div>
+
+<h2 style="margin-top:26px;">Ordens de Serviço deste cliente</h2>
+<table class="tabela">
+    <thead><tr><th>Nº OS</th><th>Emissão</th><th>Início</th><th>Status</th><th>Ações</th></tr></thead>
+    <tbody>
+        {% for os in ordens %}
+        <tr>
+            <td><b>{{ os.numero_os }}</b></td>
+            <td>{{ os.data_emissao }}</td>
+            <td>{{ os.data_inicio or '—' }}</td>
+            <td><span class="badge badge-{{ os.status|replace(' ', '') }}">{{ os.status }}</span></td>
+            <td><a href="{{ url_for('ver_os', os_id=os.id) }}" class="btn btn-secundario btn-pequeno">Ver</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5">Nenhuma OS registrada para este cliente ainda.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

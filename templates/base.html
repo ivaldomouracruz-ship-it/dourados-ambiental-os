@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Dourados Ambiental{% endblock %}</title>
+
+<!-- Ícone / PWA (aparece ao "Adicionar à tela inicial" no celular) -->
+<link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+<link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
+<link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='img/icon-192.png') }}">
+<link rel="apple-touch-icon" href="{{ url_for('static', filename='img/apple-touch-icon.png') }}">
+<meta name="theme-color" content="#14183F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dourados OS">
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="topbar no-print">
+    <div class="topbar-inner">
+        <a class="brand" href="{{ url_for('dashboard') }}">
+            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Dourados Ambiental">
+        </a>
+        <nav>
+            <a href="{{ url_for('dashboard') }}" class="{{ 'active' if request.endpoint=='dashboard' }}">Dashboard</a>
+            <a href="{{ url_for('listar_os') }}" class="{{ 'active' if request.endpoint in ['listar_os','ver_os','nova_os','editar_os'] }}">Ordens de Serviço</a>
+            <a href="{{ url_for('listar_clientes') }}" class="{{ 'active' if request.endpoint in ['listar_clientes','novo_cliente','editar_cliente','historico_cliente'] }}">Clientes</a>
+            <a href="{{ url_for('nova_os') }}" class="btn-nav">+ Nova OS</a>
+        </nav>
+    </div>
+</header>
+
+<main class="container">
+    {% with mensagens = get_flashed_messages(with_categories=true) %}
+        {% if mensagens %}
+            {% for categoria, msg in mensagens %}
+                <div class="alerta alerta-{{ categoria }} no-print">{{ msg }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+</main>
+
+<footer class="rodape no-print">
+    Dourados Ambiental &middot; Imunizar é a melhor forma de tratar! &middot;
+    (62) 3928-1329 / (62) 99165-3833 &middot; douradosambiental@gmail.com
+    <div class="credito-controlos">Sistema desenvolvido por <strong>ControlOS</strong></div>
+</footer>
+</body>
+</html>

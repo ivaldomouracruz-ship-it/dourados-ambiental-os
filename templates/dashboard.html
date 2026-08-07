@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · Dourados Ambiental{% endblock %}
+{% block content %}
+<h1>Dashboard</h1>
+
+<div class="cards">
+    <div class="card"><div class="valor">{{ total_os }}</div><div class="rotulo">Total de OS</div></div>
+    <div class="card"><div class="valor">{{ abertas }}</div><div class="rotulo">Abertas</div></div>
+    <div class="card"><div class="valor">{{ andamento }}</div><div class="rotulo">Em andamento</div></div>
+    <div class="card"><div class="valor">{{ concluidas }}</div><div class="rotulo">Concluídas</div></div>
+    <div class="card"><div class="valor">{{ total_clientes }}</div><div class="rotulo">Clientes cadastrados</div></div>
+</div>
+
+<div class="topo-lista">
+    <h2 style="margin:0;">Ordens de Serviço recentes</h2>
+    <a href="{{ url_for('nova_os') }}" class="btn btn-primario">+ Nova OS</a>
+</div>
+
+<table class="tabela">
+    <thead>
+        <tr><th>Nº OS</th><th>Cliente</th><th>Emissão</th><th>Status</th><th></th></tr>
+    </thead>
+    <tbody>
+        {% for os in recentes %}
+        <tr>
+            <td><b>{{ os.numero_os }}</b></td>
+            <td>{{ os.nome_razao_social }}</td>
+            <td>{{ os.data_emissao }}</td>
+            <td><span class="badge badge-{{ os.status|replace(' ', '') }}">{{ os.status }}</span></td>
+            <td><a href="{{ url_for('ver_os', os_id=os.id) }}" class="btn btn-secundario btn-pequeno">Ver</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5">Nenhuma Ordem de Serviço cadastrada ainda.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

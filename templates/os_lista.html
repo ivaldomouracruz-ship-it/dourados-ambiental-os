@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Ordens de Serviço · Dourados Ambiental{% endblock %}
+{% block content %}
+<div class="topo-lista">
+    <h1 style="margin:0;">Ordens de Serviço</h1>
+    <a href="{{ url_for('nova_os') }}" class="btn btn-primario">+ Nova OS</a>
+</div>
+
+<form class="filtros" method="get">
+    <input type="text" name="q" placeholder="Buscar por Nº OS ou cliente" value="{{ busca }}">
+    <select name="status">
+        <option value="">Todos os status</option>
+        {% for s in status_opcoes %}
+        <option value="{{ s }}" {{ 'selected' if s==status_filtro }}>{{ s }}</option>
+        {% endfor %}
+    </select>
+    <button class="btn btn-secundario" type="submit">Filtrar</button>
+</form>
+
+<table class="tabela">
+    <thead>
+        <tr><th>Nº OS</th><th>Cliente</th><th>Emissão</th><th>Início</th><th>Status</th><th>Ações</th></tr>
+    </thead>
+    <tbody>
+        {% for os in ordens %}
+        <tr>
+            <td><b>{{ os.numero_os }}</b></td>
+            <td>{{ os.nome_razao_social }}</td>
+            <td>{{ os.data_emissao }}</td>
+            <td>{{ os.data_inicio or '—' }}</td>
+            <td><span class="badge badge-{{ os.status|replace(' ', '') }}">{{ os.status }}</span></td>
+            <td class="acoes">
+                <a href="{{ url_for('ver_os', os_id=os.id) }}" class="btn btn-secundario btn-pequeno">Ver</a>
+                <a href="{{ url_for('editar_os', os_id=os.id) }}" class="btn btn-secundario btn-pequeno">Editar</a>
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6">Nenhuma Ordem de Serviço encontrada.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

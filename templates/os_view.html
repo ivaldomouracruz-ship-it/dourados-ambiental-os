@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% block title %}OS {{ ordem.numero_os }} · Dourados Ambiental{% endblock %}
+{% block content %}
+
+<div class="acoes no-print" style="margin-bottom:16px;">
+    <button class="btn btn-primario" onclick="window.print()">Imprimir / Salvar PDF</button>
+    <a href="{{ url_for('editar_os', os_id=ordem.id) }}" class="btn btn-secundario">Editar</a>
+    <a href="{{ url_for('listar_os') }}" class="btn btn-secundario">Voltar</a>
+    <form method="post" action="{{ url_for('excluir_os', os_id=ordem.id) }}" onsubmit="return confirm('Excluir esta Ordem de Serviço?');" style="display:inline;">
+        <button type="submit" class="btn btn-perigo">Excluir</button>
+    </form>
+</div>
+
+<div class="os-header">
+    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Dourados Ambiental">
+    <div class="titulo">
+        <h1>ORDEM DE SERVIÇO</h1>
+        <div class="numero">Nº {{ ordem.numero_os }} &middot; Emissão: {{ ordem.data_emissao }}</div>
+        <span class="badge badge-{{ ordem.status|replace(' ', '') }}">{{ ordem.status }}</span>
+    </div>
+</div>
+
+<h2 class="secao-titulo">1&nbsp;&nbsp;DADOS DO CLIENTE</h2>
+<div class="bloco-secao">
+    <div class="campo-view"><b>Cliente / Razão Social:</b> {{ ordem.nome_razao_social }}</div>
+    <div class="info-linha">
+        <div class="campo-view"><b>CNPJ / CPF:</b> {{ ordem.cnpj_cpf or '—' }}</div>
+        <div class="campo-view"><b>Telefone:</b> {{ ordem.telefone or '—' }}</div>
+    </div>
+    <div class="campo-view"><b>E-mail:</b> {{ ordem.email or '—' }}</div>
+    <div class="campo-view"><b>Endereço de Execução:</b> {{ ordem.endereco or '—' }}</div>
+    <div class="info-linha">
+        <div class="campo-view"><b>Contato / Responsável:</b> {{ ordem.contato_responsavel or '—' }}</div>
+        <div class="campo-view"><b>Segmento:</b> {{ ordem.segmento or '—' }}</div>
+    </div>
+</div>
+
+<h2 class="secao-titulo">2&nbsp;&nbsp;PERÍODO DE EXECUÇÃO</h2>
+<div class="bloco-secao">
+    <div class="info-linha">
+        <div class="campo-view"><b>Início:</b> {{ ordem.data_inicio or '—' }}</div>
+        <div class="campo-view"><b>Conclusão:</b> {{ ordem.data_conclusao or '—' }}</div>
+        <div class="campo-view"><b>Horário:</b> {{ ordem.horario_inicio or '—' }} às {{ ordem.horario_fim or '—' }}</div>
+    </div>
+    <div class="campo-view"><b>Periodicidade:</b> {{ ordem.periodicidade or '—' }}</div>
+</div>
+
+<h2 class="secao-titulo">3&nbsp;&nbsp;SERVIÇOS SOLICITADOS</h2>
+<div class="bloco-secao">
+    <table class="tabela">
+        <thead><tr><th>Cód.</th><th>Serviço</th><th>Descrição / Escopo</th></tr></thead>
+        <tbody>
+            {% for s in servicos_detalhados %}
+            <tr><td>{{ s.codigo }}</td><td><b>{{ s.nome }}</b></td><td>{{ s.descricao }}</td></tr>
+            {% else %}
+            <tr><td colspan="3">Nenhum serviço selecionado.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<h2 class="secao-titulo">4&nbsp;&nbsp;DESCRIÇÃO DETALHADA / OBSERVAÇÕES</h2>
+<div class="bloco-secao">{{ ordem.descricao_observacoes or '—' }}</div>
+
+<h2 class="secao-titulo">5&nbsp;&nbsp;MATERIAIS E EQUIPAMENTOS UTILIZADOS</h2>
+<div class="bloco-secao">{{ ordem.materiais_equipamentos or '—' }}</div>
+
+<h2 class="secao-titulo">6&nbsp;&nbsp;EQUIPE RESPONSÁVEL PELA EXECUÇÃO</h2>
+<div class="bloco-secao">
+    <table class="tabela">
+        <thead><tr><th>Nome do Colaborador</th><th>Função</th><th>Assinatura</th></tr></thead>
+        <tbody>
+            {% for m in equipe %}
+            <tr><td>{{ m.nome }}</td><td>{{ m.funcao }}</td><td>&nbsp;</td></tr>
+            {% else %}
+            <tr><td colspan="3">Nenhum colaborador informado.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<h2 class="secao-titulo">7&nbsp;&nbsp;CHECKLIST DE EXECUÇÃO E VISTORIA</h2>
+<div class="bloco-secao">
+    {% for item in checklist_itens %}
+    <div class="checklist-item">
+        <input type="checkbox" disabled {{ 'checked' if item in checklist_marcados }}>
+        {{ item }}
+    </div>
+    {% endfor %}
+</div>
+
+<h2 class="secao-titulo">8&nbsp;&nbsp;APROVAÇÃO E ASSINATURAS</h2>
+<div class="bloco-secao">
+    <div class="assinaturas">
+        <div class="assinatura-box" style="text-align:center;">
+            {% if ordem.responsavel_tecnico_assinatura %}
+            <img src="{{ ordem.responsavel_tecnico_assinatura }}" alt="Assinatura do responsável técnico"
+                 style="max-width:100%; max-height:90px; margin-bottom:6px;">
+            {% endif %}
+            <div class="linha"></div>
+            <b>Responsável Técnico — Dourados Ambiental</b><br>
+            <span style="font-size:0.82rem; color:#555;">{{ ordem.responsavel_tecnico or '' }}</span>
+        </div>
+
+        {% if ordem.assinatura_cliente_data %}
+        <div class="assinatura-box" style="text-align:center;">
+            <img src="{{ ordem.assinatura_cliente_imagem }}" alt="Assinatura do cliente"
+                 style="max-width:100%; max-height:90px; margin-bottom:6px;">
+            <div class="linha"></div>
+            <b>{{ ordem.assinatura_cliente_nome }}</b><br>
+            <span style="font-size:0.78rem; color:#555;">Assinado em {{ ordem.assinatura_cliente_data }}</span>
+            <form method="post" action="{{ url_for('resetar_assinatura_cliente', os_id=ordem.id) }}"
+                  onsubmit="return confirm('Isso apaga a assinatura atual do cliente, permitindo que ele assine novamente pelo mesmo link. Use isso se a assinatura ficou em branco/incompleta por engano. Confirma?');"
+                  class="no-print" style="margin-top:8px;">
+                <button type="submit" class="btn btn-secundario btn-pequeno">Resetar assinatura do cliente</button>
+            </form>
+        </div>
+        {% else %}
+        <div class="assinatura-box no-print" style="text-align:center;">
+            <b>Cliente / Responsável no Local</b>
+            <p style="font-size:0.8rem; color:#8A6100; margin:8px 0;">Aguardando assinatura do cliente</p>
+            <button type="button" class="btn btn-secundario btn-pequeno" onclick="copiarLinkAssinatura()">
+                Copiar link de assinatura
+            </button>
+            <input type="text" id="link-assinatura" value="{{ link_assinatura }}" readonly
+                   style="position:absolute; left:-9999px;">
+            <p id="link-copiado-msg" style="display:none; color:#1E7A34; font-size:0.78rem; margin-top:6px;">
+                Link copiado!
+            </p>
+        </div>
+        <div class="assinatura-box print-only" style="text-align:center; display:none;">
+            <div class="linha"></div>
+            <b>Cliente / Responsável no Local</b>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function copiarLinkAssinatura() {
+    const campo = document.getElementById('link-assinatura');
+    campo.style.position = 'static';
+    campo.select();
+    document.execCommand('copy');
+    campo.style.position = 'absolute';
+    campo.style.left = '-9999px';
+    const msg = document.getElementById('link-copiado-msg');
+    msg.style.display = 'block';
+    setTimeout(() => { msg.style.display = 'none'; }, 2500);
+}
+</script>
+
+{% endblock %}

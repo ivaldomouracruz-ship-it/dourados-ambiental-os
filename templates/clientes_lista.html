@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Clientes · Dourados Ambiental{% endblock %}
+{% block content %}
+<div class="topo-lista">
+    <h1 style="margin:0;">Clientes</h1>
+    <a href="{{ url_for('novo_cliente') }}" class="btn btn-primario">+ Novo cliente</a>
+</div>
+
+<form class="filtros" method="get">
+    <input type="text" name="q" placeholder="Buscar por nome ou CNPJ/CPF" value="{{ busca }}">
+    <button class="btn btn-secundario" type="submit">Buscar</button>
+</form>
+
+<table class="tabela">
+    <thead>
+        <tr><th>Nome / Razão Social</th><th>CNPJ / CPF</th><th>Telefone</th><th>Segmento</th><th>OS geradas</th><th>Ações</th></tr>
+    </thead>
+    <tbody>
+        {% for c in clientes %}
+        <tr>
+            <td>{{ c.nome_razao_social }}</td>
+            <td>{{ c.cnpj_cpf or '—' }}</td>
+            <td>{{ c.telefone or '—' }}</td>
+            <td>{{ c.segmento or '—' }}</td>
+            <td>{{ contagem.get(c.id, 0) }}</td>
+            <td class="acoes">
+                <a href="{{ url_for('historico_cliente', cliente_id=c.id) }}" class="btn btn-secundario btn-pequeno">Histórico</a>
+                <a href="{{ url_for('editar_cliente', cliente_id=c.id) }}" class="btn btn-secundario btn-pequeno">Editar</a>
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6">Nenhum cliente cadastrado.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

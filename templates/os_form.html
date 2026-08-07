@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar' if ordem else 'Nova' }} Ordem de Serviço · Dourados Ambiental{% endblock %}
+{% block content %}
+<h1>{{ 'Editar Ordem de Serviço ' + ordem.numero_os if ordem else 'Nova Ordem de Serviço' }}</h1>
+
+<form method="post">
+
+    <div class="grid-2">
+        <div class="campo">
+            <label>Nº da OS</label>
+            <input type="text" value="{{ numero_previsto }}" disabled>
+            <small>Gerado automaticamente</small>
+        </div>
+        <div class="campo">
+            <label>Data de Emissão</label>
+            <input type="date" name="data_emissao" value="{{ ordem.data_emissao if ordem else hoje }}" required>
+        </div>
+    </div>
+
+    <h2 class="secao-titulo">1&nbsp;&nbsp;DADOS DO CLIENTE</h2>
+    <div class="bloco-secao">
+        <div class="campo">
+            <label>Cliente / Razão Social</label>
+            <select name="cliente_id" id="cliente_id" onchange="toggleNovoCliente()" required>
+                <option value="">Selecione...</option>
+                <option value="novo" {{ 'selected' if not ordem }}>+ Cadastrar novo cliente</option>
+                {% for c in clientes %}
+                <option value="{{ c.id }}" {{ 'selected' if ordem and ordem.cliente_id==c.id }}>{{ c.nome_razao_social }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div id="novo-cliente-campos">
+            <div class="grid-2">
+                <div class="campo"><label>Nome / Razão Social</label><input type="text" name="novo_cliente_nome"></div>
+                <div class="campo"><label>CNPJ / CPF</label><input type="text" name="novo_cliente_cnpj_cpf"></div>
+            </div>
+            <div class="grid-2">
+                <div class="campo"><label>Telefone</label><input type="text" name="novo_cliente_telefone"></div>
+                <div class="campo"><label>E-mail</label><input type="email" name="novo_cliente_email"></div>
+            </div>
+            <div class="campo"><label>Endereço de Execução do Serviço</label><input type="text" name="novo_cliente_endereco"></div>
+            <div class="campo"><label>Segmento</label><input type="text" name="novo_cliente_segmento" placeholder="Residencial, comercial, industrial..."></div>
+        </div>
+
+        <div class="campo">
+            <label>Contato / Responsável no Local</label>
+            <input type="text" name="contato_responsavel" value="{{ ordem.contato_responsavel if ordem else '' }}">
+        </div>
+    </div>
+
+    <h2 class="secao-titulo">2&nbsp;&nbsp;PERÍODO DE EXECUÇÃO</h2>
+    <div class="bloco-secao">
+        <div class="grid-3">
+            <div class="campo"><label>Data de Início</label><input type="date" name="data_inicio" value="{{ ordem.data_inicio if ordem else '' }}"></div>
+            <div class="campo"><label>Data de Conclusão</label><input type="date" name="data_conclusao" value="{{ ordem.data_conclusao if ordem else '' }}"></div>
+            <div class="campo">
+                <label>Horário</label>
+                <div style="display:flex; gap:8px;">
+                    <input type="time" name="horario_inicio" value="{{ ordem.horario_inicio if ordem else '' }}">
+                    <input type="time" name="horario_fim" value="{{ ordem.horario_fim if ordem else '' }}">
+                </div>
+            </div>
+        </div>
+        <div class="campo">
+            <label>Periodicidade</label>
+            <select name="periodicidade">
+                {% for p in ['Única', 'Diária', 'Semanal', 'Mensal', 'Contrato contínuo'] %}
+                <option value="{{ p }}" {{ 'selected' if ordem and ordem.periodicidade==p }}>{{ p }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <h2 class="secao-titulo">3&nbsp;&nbsp;SERVIÇOS SOLICITADOS</h2>
+    <div class="bloco-secao">
+        {% for s in servicos %}
+        <label class="servico-item">
+            <input type="checkbox" name="servicos" value="{{ s.codigo }}" {{ 'checked' if s.codigo in servicos_marcados }}>
+            <div>
+                <div class="servico-nome">{{ s.codigo }} — {{ s.nome }}</div>
+                <div class="servico-desc">{{ s.descricao }}</div>
+            </div>
+        </label>
+        {% endfor %}
+    </div>
+
+    <h2 class="secao-titulo">4&nbsp;&nbsp;DESCRIÇÃO DETALHADA / OBSERVAÇÕES</h2>
+    <div class="bloco-secao">
+        <div class="campo">
+            <textarea name="descricao_observacoes" rows="4">{{ ordem.descricao_observacoes if ordem else '' }}</textarea>
+        </div>
+    </div>
+
+    <h2 class="secao-titulo">5&nbsp;&nbsp;MATERIAIS E EQUIPAMENTOS UTILIZADOS</h2>
+    <div class="bloco-secao">
+        <div class="campo">
+            <textarea name="materiais_equipamentos" rows="3">{{ ordem.materiais_equipamentos if ordem else '' }}</textarea>
+        </div>
+    </div>
+
+    <h2 class="secao-titulo">6&nbsp;&nbsp;EQUIPE RESPONSÁVEL PELA EXECUÇÃO</h2>
+    <div class="bloco-secao">
+        <div id="equipe-linhas">
+            {% if equipe %}
+                {% for membro in equipe %}
+                <div class="equipe-linha">
+                    <input type="text" name="equipe_nome" placeholder="Nome do colaborador" value="{{ membro.nome }}">
+                    <input type="text" name="equipe_funcao" placeholder="Função" value="{{ membro.funcao }}">
+                    <button type="button" class="remover-linha" onclick="removerLinha(this)">✕</button>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="equipe-linha">
+                    <input type="text" name="equipe_nome" placeholder="Nome do colaborador">
+                    <input type="text" name="equipe_funcao" placeholder="Função">
+                    <button type="button" class="remover-linha" onclick="removerLinha(this)">✕</button>
+                </div>
+            {% endif %}
+        </div>
+        <button type="button" class="btn btn-secundario btn-pequeno" onclick="adicionarLinha()">+ Adicionar colaborador</button>
+    </div>
+
+    <h2 class="secao-titulo">7&nbsp;&nbsp;CHECKLIST DE EXECUÇÃO E VISTORIA</h2>
+    <div class="bloco-secao">
+        {% for item in checklist_itens %}
+        <label class="checklist-item">
+            <input type="checkbox" name="checklist" value="{{ item }}" {{ 'checked' if item in checklist_marcados }}>
+            {{ item }}
+        </label>
+        {% endfor %}
+    </div>
+
+    <h2 class="secao-titulo">8&nbsp;&nbsp;APROVAÇÃO E RESPONSÁVEL TÉCNICO</h2>
+    <div class="bloco-secao">
+        <div class="grid-2">
+            <div class="campo">
+                <label>Responsável Técnico — Dourados Ambiental</label>
+                <input type="text" name="responsavel_tecnico" value="{{ ordem.responsavel_tecnico if ordem else '' }}">
+            </div>
+            <div class="campo">
+                <label>Status da OS</label>
+                <select name="status">
+                    {% for s in status_opcoes %}
+                    <option value="{{ s }}" {{ 'selected' if ordem and ordem.status==s or (not ordem and s=='Aberta') }}>{{ s }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="campo">
+            <label>Sua assinatura</label>
+
+            {% if ordem and ordem.responsavel_tecnico_assinatura %}
+            <div id="assinatura-existente">
+                <img src="{{ ordem.responsavel_tecnico_assinatura }}" alt="Assinatura atual"
+                     style="max-width:280px; max-height:100px; border:1px solid var(--cinza-borda); border-radius:8px; display:block; margin-bottom:8px;">
+                <button type="button" class="btn btn-secundario btn-pequeno" onclick="refazerAssinaturaTecnico()">
+                    Refazer assinatura
+                </button>
+            </div>
+            {% endif %}
+
+            <div id="assinatura-nova-tecnico"{% if ordem and ordem.responsavel_tecnico_assinatura %} style="display:none;"{% endif %}>
+                <canvas id="pad-tecnico" class="canvas-assinatura"></canvas>
+                <button type="button" class="btn btn-secundario btn-pequeno" id="btn-limpar-tecnico" style="margin-top:8px;">
+                    Limpar assinatura
+                </button>
+            </div>
+
+            <input type="hidden" name="responsavel_assinatura_dataurl" id="responsavel_assinatura_dataurl"
+                   value="{{ ordem.responsavel_tecnico_assinatura if ordem and ordem.responsavel_tecnico_assinatura else '' }}">
+            <small>Assine no quadro com o dedo (celular) ou o mouse (computador). O cliente vê essa assinatura junto da OS.</small>
+        </div>
+    </div>
+
+    <div class="acoes-form">
+        <button type="submit" class="btn btn-primario">{{ 'Salvar alterações' if ordem else 'Criar Ordem de Serviço' }}</button>
+        <a href="{{ url_for('listar_os') }}" class="btn btn-secundario">Cancelar</a>
+    </div>
+</form>
+
+<script>
+function toggleNovoCliente() {
+    const sel = document.getElementById('cliente_id');
+    const campos = document.getElementById('novo-cliente-campos');
+    campos.style.display = (sel.value === 'novo') ? 'block' : 'none';
+}
+function adicionarLinha() {
+    const container = document.getElementById('equipe-linhas');
+    const div = document.createElement('div');
+    div.className = 'equipe-linha';
+    div.innerHTML = `
+        <input type="text" name="equipe_nome" placeholder="Nome do colaborador">
+        <input type="text" name="equipe_funcao" placeholder="Função">
+        <button type="button" class="remover-linha" onclick="removerLinha(this)">✕</button>`;
+    container.appendChild(div);
+}
+function removerLinha(btn) {
+    const container = document.getElementById('equipe-linhas');
+    if (container.children.length > 1) {
+        btn.closest('.equipe-linha').remove();
+    } else {
+        btn.closest('.equipe-linha').querySelectorAll('input').forEach(i => i.value = '');
+    }
+}
+document.addEventListener('DOMContentLoaded', toggleNovoCliente);
+
+function refazerAssinaturaTecnico() {
+    document.getElementById('assinatura-existente').style.display = 'none';
+    document.getElementById('assinatura-nova-tecnico').style.display = 'block';
+    document.getElementById('responsavel_assinatura_dataurl').value = '';
+    if (window.__ajustarPadTecnico) window.__ajustarPadTecnico();
+}
+
+(function () {
+    const canvas = document.getElementById('pad-tecnico');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let comprimentoTraco = 0;
+    let ultimaPos = null;
+    const LIMIAR_MINIMO = 15;
+
+    function configurarTraco() {
+        ctx.strokeStyle = '#1A1A1A';
+        ctx.lineWidth = 2.2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+    }
+    function ajustarTamanho() {
+        const rect = canvas.getBoundingClientRect();
+        if (rect.width === 0) return; // container escondido (assinatura já existe)
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+        configurarTraco();
+    }
+    window.__ajustarPadTecnico = ajustarTamanho;
+    ajustarTamanho();
+    window.addEventListener('resize', ajustarTamanho);
+
+    let desenhando = false;
+    function posicao(e) {
+        const rect = canvas.getBoundingClientRect();
+        return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    }
+    function distancia(a, b) {
+        return Math.hypot(b.x - a.x, b.y - a.y);
+    }
+    canvas.addEventListener('pointerdown', (e) => {
+        desenhando = true;
+        const p = posicao(e);
+        ultimaPos = p;
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        canvas.setPointerCapture(e.pointerId);
+    });
+    canvas.addEventListener('pointermove', (e) => {
+        if (!desenhando) return;
+        const p = posicao(e);
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
+        comprimentoTraco += distancia(ultimaPos, p);
+        ultimaPos = p;
+    });
+    canvas.addEventListener('pointerup', () => { desenhando = false; });
+    canvas.addEventListener('pointerleave', () => { desenhando = false; });
+
+    const btnLimpar = document.getElementById('btn-limpar-tecnico');
+    if (btnLimpar) {
+        btnLimpar.addEventListener('click', () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            comprimentoTraco = 0;
+        });
+    }
+
+    const form = canvas.closest('form');
+    if (form) {
+        form.addEventListener('submit', () => {
+            if (comprimentoTraco >= LIMIAR_MINIMO) {
+                document.getElementById('responsavel_assinatura_dataurl').value = canvas.toDataURL('image/png');
+            }
+            // se não desenhou nada novo (ou o traço foi curto demais), o campo hidden
+            // mantém o valor original: assinatura existente (ao editar) ou vazio (ao criar)
+        });
+    }
+})();
+</script>
+{% endblock %}

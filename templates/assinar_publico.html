@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assinatura — OS {{ ordem.numero_os }} · Dourados Ambiental</title>
+<link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
+<link rel="apple-touch-icon" href="{{ url_for('static', filename='img/apple-touch-icon.png') }}">
+<meta name="theme-color" content="#14183F">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<style>
+    body { background: #fff; }
+    .assinar-container { max-width: 640px; margin: 0 auto; padding: 24px 16px 60px; }
+    .assinar-logo { text-align: center; margin-bottom: 18px; }
+    .assinar-logo img { height: 60px; }
+    #pad {
+        border: 2px dashed var(--cinza-borda);
+        border-radius: 8px;
+        width: 100%;
+        height: 200px;
+        touch-action: none;
+        background: #fff;
+        display: block;
+    }
+    .assinatura-imagem {
+        max-width: 100%;
+        border: 1px solid var(--cinza-borda);
+        border-radius: 8px;
+        background: #fff;
+    }
+    .confirmo-linha { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 16px; }
+    .confirmo-linha input { width: auto; margin-top: 4px; }
+    .confirmo-linha label { font-weight: 400; margin: 0; font-size: 0.88rem; }
+</style>
+</head>
+<body>
+<div class="assinar-container">
+
+    <div class="assinar-logo">
+        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Dourados Ambiental">
+    </div>
+
+    {% with mensagens = get_flashed_messages(with_categories=true) %}
+        {% if mensagens %}
+            {% for categoria, msg in mensagens %}
+            <div class="alerta alerta-{{ categoria }}">{{ msg }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <h1 style="text-align:center;">Ordem de Serviço {{ ordem.numero_os }}</h1>
+    <p style="text-align:center; margin-top:-10px;">
+        <span class="badge badge-{{ ordem.status|replace(' ', '') }}">{{ ordem.status }}</span>
+    </p>
+
+    <h2 class="secao-titulo">Dados do Cliente</h2>
+    <div class="bloco-secao">
+        <div class="campo-view"><b>Cliente:</b> {{ ordem.nome_razao_social }}</div>
+        <div class="campo-view"><b>CNPJ / CPF:</b> {{ ordem.cnpj_cpf or '—' }}</div>
+        <div class="campo-view"><b>Endereço:</b> {{ ordem.endereco or '—' }}</div>
+        <div class="campo-view"><b>Contato / Responsável:</b> {{ ordem.contato_responsavel or '—' }}</div>
+    </div>
+
+    <h2 class="secao-titulo" style="margin-top:18px;">Período de Execução</h2>
+    <div class="bloco-secao">
+        <div class="campo-view"><b>Emissão:</b> {{ ordem.data_emissao }}</div>
+        <div class="campo-view"><b>Início:</b> {{ ordem.data_inicio or '—' }}</div>
+        <div class="campo-view"><b>Conclusão:</b> {{ ordem.data_conclusao or '—' }}</div>
+        <div class="campo-view"><b>Horário:</b> {{ ordem.horario_inicio or '—' }} às {{ ordem.horario_fim or '—' }}</div>
+        <div class="campo-view"><b>Periodicidade:</b> {{ ordem.periodicidade or '—' }}</div>
+    </div>
+
+    <h2 class="secao-titulo" style="margin-top:18px;">Serviços realizados</h2>
+    <div class="bloco-secao">
+        <ul style="margin:0; padding-left:20px; font-size:0.92rem;">
+            {% for s in servicos_detalhados %}
+            <li style="margin-bottom:6px;"><b>{{ s.nome }}</b> — {{ s.descricao }}</li>
+            {% else %}
+            <li>Nenhum serviço registrado nesta OS.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    {% if ordem.descricao_observacoes %}
+    <h2 class="secao-titulo" style="margin-top:18px;">Observações</h2>
+    <div class="bloco-secao">{{ ordem.descricao_observacoes }}</div>
+    {% endif %}
+
+    {% if ordem.materiais_equipamentos %}
+    <h2 class="secao-titulo" style="margin-top:18px;">Materiais e Equipamentos Utilizados</h2>
+    <div class="bloco-secao">{{ ordem.materiais_equipamentos }}</div>
+    {% endif %}
+
+    {% if equipe %}
+    <h2 class="secao-titulo" style="margin-top:18px;">Equipe Responsável</h2>
+    <div class="bloco-secao">
+        <ul style="margin:0; padding-left:20px; font-size:0.92rem;">
+            {% for m in equipe %}
+            <li style="margin-bottom:4px;">{{ m.nome }}{% if m.funcao %} — {{ m.funcao }}{% endif %}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <h2 class="secao-titulo" style="margin-top:18px;">Checklist de Execução e Vistoria</h2>
+    <div class="bloco-secao">
+        {% for item in checklist_itens %}
+        <div class="checklist-item">
+            <input type="checkbox" disabled {{ 'checked' if item in checklist_marcados }}>
+            {{ item }}
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if ordem.responsavel_tecnico_assinatura or ordem.responsavel_tecnico %}
+    <h2 class="secao-titulo" style="margin-top:18px;">Responsável Técnico — Dourados Ambiental</h2>
+    <div class="bloco-secao" style="text-align:center;">
+        {% if ordem.responsavel_tecnico_assinatura %}
+        <img src="{{ ordem.responsavel_tecnico_assinatura }}" alt="Assinatura do responsável técnico"
+             style="max-width:100%; max-height:90px; margin-bottom:6px;">
+        {% endif %}
+        <p style="margin:0;"><b>{{ ordem.responsavel_tecnico }}</b></p>
+    </div>
+    {% endif %}
+
+    {% if ordem.assinatura_cliente_data %}
+
+    <h2 class="secao-titulo" style="margin-top:18px;">Assinatura registrada</h2>
+    <div class="bloco-secao" style="text-align:center;">
+        <img class="assinatura-imagem" src="{{ ordem.assinatura_cliente_imagem }}" alt="Assinatura do cliente">
+        <p style="margin-top:12px; margin-bottom:0;"><b>{{ ordem.assinatura_cliente_nome }}</b></p>
+        <p style="color:#555; font-size:0.85rem; margin-top:2px;">Assinado em {{ ordem.assinatura_cliente_data }}</p>
+        <p style="color:#1E7A34; font-weight:700; margin-top:14px;">✓ Documento já assinado — obrigado!</p>
+    </div>
+
+    {% else %}
+
+    <h2 class="secao-titulo" style="margin-top:18px;">Confirme e assine abaixo</h2>
+    <div class="bloco-secao">
+        <p style="font-size:0.88rem; color:#555; margin-top:0;">
+            Ao assinar, você confirma que os serviços listados acima foram executados conforme descrito.
+        </p>
+        <form method="post" id="form-assinatura">
+            <div class="campo">
+                <label>Nome completo de quem está assinando</label>
+                <input type="text" name="nome_confirmacao" required>
+            </div>
+
+            <div class="campo">
+                <label>Assine no quadro abaixo (use o dedo no celular ou o mouse no computador)</label>
+                <canvas id="pad"></canvas>
+                <button type="button" class="btn btn-secundario btn-pequeno" id="btn-limpar" style="margin-top:8px;">
+                    Limpar assinatura
+                </button>
+            </div>
+
+            <input type="hidden" name="assinatura_dataurl" id="assinatura_dataurl">
+            <input type="hidden" name="tem_assinatura" id="tem_assinatura" value="nao">
+            <input type="hidden" name="comprimento_tracado" id="comprimento_tracado" value="0">
+
+            <div class="confirmo-linha">
+                <input type="checkbox" id="confirmo" required>
+                <label for="confirmo">Confirmo que os serviços listados acima foram executados.</label>
+            </div>
+
+            <button type="submit" class="btn btn-primario" style="width:100%;">Confirmar e Assinar</button>
+        </form>
+    </div>
+
+    {% endif %}
+
+    <div class="credito-controlos" style="text-align:center; margin-top:24px;">
+        Sistema desenvolvido por <strong>ControlOS</strong>
+    </div>
+</div>
+
+<script>
+(function () {
+    const canvas = document.getElementById('pad');
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+
+    function configurarTraço() {
+        ctx.strokeStyle = '#1A1A1A';
+        ctx.lineWidth = 2.2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+    }
+
+    function ajustarTamanho() {
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+        configurarTraço();
+    }
+    ajustarTamanho();
+    window.addEventListener('resize', ajustarTamanho);
+
+    let desenhando = false;
+    let comprimentoTraco = 0;
+    let ultimaPos = null;
+    const LIMIAR_MINIMO = 15; // pixels — abaixo disso, consideramos "não assinou de verdade"
+
+    function posicao(e) {
+        const rect = canvas.getBoundingClientRect();
+        return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    }
+    function distancia(a, b) {
+        return Math.hypot(b.x - a.x, b.y - a.y);
+    }
+
+    canvas.addEventListener('pointerdown', (e) => {
+        desenhando = true;
+        const p = posicao(e);
+        ultimaPos = p;
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        canvas.setPointerCapture(e.pointerId);
+    });
+    canvas.addEventListener('pointermove', (e) => {
+        if (!desenhando) return;
+        const p = posicao(e);
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
+        comprimentoTraco += distancia(ultimaPos, p);
+        ultimaPos = p;
+    });
+    canvas.addEventListener('pointerup', () => { desenhando = false; });
+    canvas.addEventListener('pointerleave', () => { desenhando = false; });
+
+    const btnLimpar = document.getElementById('btn-limpar');
+    if (btnLimpar) {
+        btnLimpar.addEventListener('click', () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            comprimentoTraco = 0;
+        });
+    }
+
+    const form = document.getElementById('form-assinatura');
+    if (form) {
+        form.addEventListener('submit', (e) => {
+            if (comprimentoTraco < LIMIAR_MINIMO) {
+                e.preventDefault();
+                alert('Por favor, desenhe sua assinatura completa no quadro antes de confirmar (um toque rápido não é suficiente).');
+                return;
+            }
+            document.getElementById('assinatura_dataurl').value = canvas.toDataURL('image/png');
+            document.getElementById('tem_assinatura').value = 'sim';
+            document.getElementById('comprimento_tracado').value = comprimentoTraco;
+        });
+    }
+})();
+</script>
+</body>
+</html>

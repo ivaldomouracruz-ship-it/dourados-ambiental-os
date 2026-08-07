@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar' if cliente else 'Novo' }} Cliente · Dourados Ambiental{% endblock %}
+{% block content %}
+<h1>{{ 'Editar Cliente' if cliente else 'Novo Cliente' }}</h1>
+<form method="post">
+    <div class="campo">
+        <label>Nome / Razão Social</label>
+        <input type="text" name="nome_razao_social" value="{{ cliente.nome_razao_social if cliente else '' }}" required>
+    </div>
+    <div class="grid-2">
+        <div class="campo"><label>CNPJ / CPF</label><input type="text" name="cnpj_cpf" value="{{ cliente.cnpj_cpf if cliente else '' }}"></div>
+        <div class="campo"><label>Telefone</label><input type="text" name="telefone" value="{{ cliente.telefone if cliente else '' }}"></div>
+    </div>
+    <div class="campo"><label>E-mail</label><input type="email" name="email" value="{{ cliente.email if cliente else '' }}"></div>
+    <div class="campo"><label>Endereço de Execução do Serviço</label><input type="text" name="endereco" value="{{ cliente.endereco if cliente else '' }}"></div>
+    <div class="campo"><label>Segmento</label><input type="text" name="segmento" value="{{ cliente.segmento if cliente else '' }}" placeholder="Residencial, comercial, industrial..."></div>
+
+    <div class="acoes-form">
+        <button type="submit" class="btn btn-primario">Salvar</button>
+        <a href="{{ url_for('listar_clientes') }}" class="btn btn-secundario">Cancelar</a>
+    </div>
+</form>
+{% endblock %}
