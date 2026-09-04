@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS ordens_servico (
     horario_fim TEXT,
     periodicidade TEXT,
     servicos_json TEXT,          -- lista de códigos de serviço selecionados, ex: ["DA.01","DA.03"]
+    produtos_json TEXT,          -- lista de códigos de produtos químicos utilizados, ex: ["PR.01","PR.04"]
     descricao_observacoes TEXT,
     materiais_equipamentos TEXT,
     equipe_json TEXT,            -- lista de {nome, funcao}

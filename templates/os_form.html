@@ -85,21 +85,52 @@
         {% endfor %}
     </div>
 
-    <h2 class="secao-titulo">4&nbsp;&nbsp;DESCRIÇÃO DETALHADA / OBSERVAÇÕES</h2>
+    <h2 class="secao-titulo">4&nbsp;&nbsp;PRODUTOS QUÍMICOS UTILIZADOS</h2>
+    <div class="bloco-secao">
+        <p style="font-size:0.85rem; color:#555; margin-top:0;">
+            Marque os produtos usados neste serviço. Se faltar algum produto na lista, avise para ele ser cadastrado.
+        </p>
+        <table class="tabela" style="font-size:0.82rem;">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Produto / Princípio Ativo</th>
+                    <th>Grupo Químico</th>
+                    <th>Modo de Aplicação</th>
+                    <th>Nº Registro</th>
+                    <th>Concentração</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in produtos %}
+                <tr>
+                    <td><input type="checkbox" name="produtos" value="{{ p.codigo }}" {{ 'checked' if p.codigo in produtos_marcados }}></td>
+                    <td><b>{{ p.nome_comercial }}</b><br><span style="color:#666;">{{ p.principio_ativo }}</span></td>
+                    <td>{{ p.grupo_quimico }}</td>
+                    <td>{{ p.modo_aplicacao }}</td>
+                    <td>{{ p.numero_registro }}</td>
+                    <td>{{ p.concentracao }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <h2 class="secao-titulo">5&nbsp;&nbsp;DESCRIÇÃO DETALHADA / OBSERVAÇÕES</h2>
     <div class="bloco-secao">
         <div class="campo">
             <textarea name="descricao_observacoes" rows="4">{{ ordem.descricao_observacoes if ordem else '' }}</textarea>
         </div>
     </div>
 
-    <h2 class="secao-titulo">5&nbsp;&nbsp;MATERIAIS E EQUIPAMENTOS UTILIZADOS</h2>
+    <h2 class="secao-titulo">6&nbsp;&nbsp;MATERIAIS E EQUIPAMENTOS UTILIZADOS</h2>
     <div class="bloco-secao">
         <div class="campo">
             <textarea name="materiais_equipamentos" rows="3">{{ ordem.materiais_equipamentos if ordem else '' }}</textarea>
         </div>
     </div>
 
-    <h2 class="secao-titulo">6&nbsp;&nbsp;EQUIPE RESPONSÁVEL PELA EXECUÇÃO</h2>
+    <h2 class="secao-titulo">7&nbsp;&nbsp;EQUIPE RESPONSÁVEL PELA EXECUÇÃO</h2>
     <div class="bloco-secao">
         <div id="equipe-linhas">
             {% if equipe %}
@@ -121,7 +152,7 @@
         <button type="button" class="btn btn-secundario btn-pequeno" onclick="adicionarLinha()">+ Adicionar colaborador</button>
     </div>
 
-    <h2 class="secao-titulo">7&nbsp;&nbsp;CHECKLIST DE EXECUÇÃO E VISTORIA</h2>
+    <h2 class="secao-titulo">8&nbsp;&nbsp;CHECKLIST DE EXECUÇÃO E VISTORIA</h2>
     <div class="bloco-secao">
         {% for item in checklist_itens %}
         <label class="checklist-item">
@@ -131,7 +162,7 @@
         {% endfor %}
     </div>
 
-    <h2 class="secao-titulo">8&nbsp;&nbsp;APROVAÇÃO E RESPONSÁVEL TÉCNICO</h2>
+    <h2 class="secao-titulo">9&nbsp;&nbsp;APROVAÇÃO E RESPONSÁVEL TÉCNICO</h2>
     <div class="bloco-secao">
         <div class="grid-2">
             <div class="campo">

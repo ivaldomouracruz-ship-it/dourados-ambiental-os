@@ -51,6 +51,40 @@ SERVICOS = [
 ]
 SERVICOS_POR_CODIGO = {s["codigo"]: s for s in SERVICOS}
 
+# ---------------------------------------------------------------------------
+# Produtos químicos utilizados nos serviços — catálogo interno da Dourados
+# Ambiental. Os 7 primeiros vieram do comprovante de execução (OS nº 3168)
+# enviado pela Rosa; ela ainda vai passar os nomes dos produtos que faltam,
+# então é só adicionar novos itens nesta lista quando ela enviar (mesmo
+# padrão de campos). CONFIRME estes 7 com ela antes de considerar definitivos
+# — foram transcritos de uma foto do papel e alguns campos (marcados com
+# "?") ficaram difíceis de ler com certeza.
+# ---------------------------------------------------------------------------
+PRODUTOS = [
+    {"codigo": "PR.01", "nome_comercial": "Diclorvós", "grupo_quimico": "Organofosforado",
+     "principio_ativo": "Diclorvós", "solvente": "Água", "modo_aplicacao": "50ml para 5L de água",
+     "info_medicas": "Atropina, Oxima", "numero_registro": "3160600500019", "concentracao": "CE"},
+    {"codigo": "PR.02", "nome_comercial": "Cipermetrina", "grupo_quimico": "Piretroide",
+     "principio_ativo": "Cipermetrina", "solvente": "Água", "modo_aplicacao": "50ml para 5L de água",
+     "info_medicas": "Anti-histamínicos", "numero_registro": "3160600460017", "concentracao": "CE"},
+    {"codigo": "PR.03", "nome_comercial": "Deltametrina", "grupo_quimico": "Piretroide",
+     "principio_ativo": "Deltametrina", "solvente": "Pronto uso", "modo_aplicacao": "Polvilhadeira",
+     "info_medicas": "Anti-histamínicos", "numero_registro": "325220049", "concentracao": "Concentrado"},
+    {"codigo": "PR.04", "nome_comercial": "Raticida bloco parafinado", "grupo_quimico": "Cumarínico",
+     "principio_ativo": "Brodifacum", "solvente": "Pronto uso", "modo_aplicacao": "Bloco (raticida)",
+     "info_medicas": "Vitamina K", "numero_registro": "3042500800016", "concentracao": "Concentrado"},
+    {"codigo": "PR.05", "nome_comercial": "Raticida em grãos", "grupo_quimico": "Cumarínico",
+     "principio_ativo": "Brodifacum", "solvente": "Pronto uso", "modo_aplicacao": "Grãos/isca granulada",
+     "info_medicas": "Atropina, Oxima", "numero_registro": "3160600870010", "concentracao": "Concentrado"},
+    {"codigo": "PR.06", "nome_comercial": "Inseticida aerossol", "grupo_quimico": "Piretroide",
+     "principio_ativo": "Piretroide (aerossol)", "solvente": "Pronto uso", "modo_aplicacao": "Aerossol",
+     "info_medicas": "Anti-histamínicos", "numero_registro": "3160600810018", "concentracao": "Concentrado"},
+    {"codigo": "PR.07", "nome_comercial": "Gel para baratas", "grupo_quimico": "Oxadiazina",
+     "principio_ativo": "Indoxacarbe", "solvente": "Gel", "modo_aplicacao": "Bisnaga (seringa dosadora)",
+     "info_medicas": "Não tem antídoto específico", "numero_registro": "3342800280017", "concentracao": "Gel"},
+]
+PRODUTOS_POR_CODIGO = {p["codigo"]: p for p in PRODUTOS}
+
 CHECKLIST_ITENS = [
     "Ambiente vistoriado antes do início dos trabalhos",
     "Serviços executados conforme escopo definido",
@@ -103,6 +137,7 @@ def migrar_schema():
         "assinatura_cliente_imagem": "TEXT",
         "assinatura_cliente_data": "TEXT",
         "responsavel_tecnico_assinatura": "TEXT",
+        "produtos_json": "TEXT",
     }
     for coluna, tipo in colunas_novas.items():
         if coluna not in colunas_existentes:
@@ -219,6 +254,7 @@ def nova_os():
             cliente_id = int(cliente_id)
 
         servicos_selecionados = request.form.getlist("servicos")
+        produtos_selecionados = request.form.getlist("produtos")
         nomes_equipe = request.form.getlist("equipe_nome")
         funcoes_equipe = request.form.getlist("equipe_funcao")
         equipe = [
@@ -237,10 +273,10 @@ def nova_os():
             """INSERT INTO ordens_servico (
                 numero_os, data_emissao, cliente_id, contato_responsavel,
                 data_inicio, data_conclusao, horario_inicio, horario_fim, periodicidade,
-                servicos_json, descricao_observacoes, materiais_equipamentos,
+                servicos_json, produtos_json, descricao_observacoes, materiais_equipamentos,
                 equipe_json, checklist_json, responsavel_tecnico, responsavel_tecnico_assinatura,
                 status, token_assinatura
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 numero_os,
                 request.form.get("data_emissao") or datetime.now().strftime("%Y-%m-%d"),
@@ -252,6 +288,7 @@ def nova_os():
                 request.form.get("horario_fim", ""),
                 request.form.get("periodicidade", ""),
                 json.dumps(servicos_selecionados, ensure_ascii=False),
+                json.dumps(produtos_selecionados, ensure_ascii=False),
                 request.form.get("descricao_observacoes", "").strip(),
                 request.form.get("materiais_equipamentos", "").strip(),
                 json.dumps(equipe, ensure_ascii=False),
@@ -270,10 +307,10 @@ def nova_os():
     clientes = db.execute("SELECT * FROM clientes ORDER BY nome_razao_social").fetchall()
     numero_previsto = gerar_numero_os(db)
     return render_template(
-        "os_form.html", clientes=clientes, servicos=SERVICOS,
+        "os_form.html", clientes=clientes, servicos=SERVICOS, produtos=PRODUTOS,
         checklist_itens=CHECKLIST_ITENS, status_opcoes=STATUS_OPCOES,
         numero_previsto=numero_previsto, ordem=None,
-        equipe=[], servicos_marcados=[], checklist_marcados=[],
+        equipe=[], servicos_marcados=[], produtos_marcados=[], checklist_marcados=[],
         hoje=datetime.now().strftime("%Y-%m-%d"),
     )
 
@@ -307,6 +344,7 @@ def editar_os(os_id):
             cliente_id = int(cliente_id)
 
         servicos_selecionados = request.form.getlist("servicos")
+        produtos_selecionados = request.form.getlist("produtos")
         nomes_equipe = request.form.getlist("equipe_nome")
         funcoes_equipe = request.form.getlist("equipe_funcao")
         equipe = [
@@ -323,7 +361,7 @@ def editar_os(os_id):
             """UPDATE ordens_servico SET
                 data_emissao=?, cliente_id=?, contato_responsavel=?,
                 data_inicio=?, data_conclusao=?, horario_inicio=?, horario_fim=?, periodicidade=?,
-                servicos_json=?, descricao_observacoes=?, materiais_equipamentos=?,
+                servicos_json=?, produtos_json=?, descricao_observacoes=?, materiais_equipamentos=?,
                 equipe_json=?, checklist_json=?, responsavel_tecnico=?, responsavel_tecnico_assinatura=?,
                 status=?, atualizado_em=datetime('now','localtime')
                WHERE id=?""",
@@ -337,6 +375,7 @@ def editar_os(os_id):
                 request.form.get("horario_fim", ""),
                 request.form.get("periodicidade", ""),
                 json.dumps(servicos_selecionados, ensure_ascii=False),
+                json.dumps(produtos_selecionados, ensure_ascii=False),
                 request.form.get("descricao_observacoes", "").strip(),
                 request.form.get("materiais_equipamentos", "").strip(),
                 json.dumps(equipe, ensure_ascii=False),
@@ -353,11 +392,12 @@ def editar_os(os_id):
 
     clientes = db.execute("SELECT * FROM clientes ORDER BY nome_razao_social").fetchall()
     return render_template(
-        "os_form.html", clientes=clientes, servicos=SERVICOS,
+        "os_form.html", clientes=clientes, servicos=SERVICOS, produtos=PRODUTOS,
         checklist_itens=CHECKLIST_ITENS, status_opcoes=STATUS_OPCOES,
         numero_previsto=ordem["numero_os"], ordem=ordem,
         equipe=json.loads(ordem["equipe_json"] or "[]"),
         servicos_marcados=json.loads(ordem["servicos_json"] or "[]"),
+        produtos_marcados=json.loads(ordem["produtos_json"] or "[]"),
         checklist_marcados=json.loads(ordem["checklist_json"] or "[]"),
         hoje=datetime.now().strftime("%Y-%m-%d"),
     )
@@ -387,12 +427,15 @@ def ver_os(os_id):
 
     servicos_marcados = json.loads(ordem["servicos_json"] or "[]")
     servicos_detalhados = [SERVICOS_POR_CODIGO[c] for c in servicos_marcados if c in SERVICOS_POR_CODIGO]
+    produtos_marcados = json.loads(ordem["produtos_json"] or "[]")
+    produtos_detalhados = [PRODUTOS_POR_CODIGO[c] for c in produtos_marcados if c in PRODUTOS_POR_CODIGO]
     equipe = json.loads(ordem["equipe_json"] or "[]")
     checklist_marcados = set(json.loads(ordem["checklist_json"] or "[]"))
     link_assinatura = request.host_url.rstrip("/") + url_for("assinar_get", token=ordem["token_assinatura"])
 
     return render_template(
         "os_view.html", ordem=ordem, servicos_detalhados=servicos_detalhados,
+        produtos_detalhados=produtos_detalhados,
         equipe=equipe, checklist_itens=CHECKLIST_ITENS,
         checklist_marcados=checklist_marcados, link_assinatura=link_assinatura,
     )
@@ -449,11 +492,14 @@ def assinar_get(token):
 
     servicos_marcados = json.loads(ordem["servicos_json"] or "[]")
     servicos_detalhados = [SERVICOS_POR_CODIGO[c] for c in servicos_marcados if c in SERVICOS_POR_CODIGO]
+    produtos_marcados = json.loads(ordem["produtos_json"] or "[]")
+    produtos_detalhados = [PRODUTOS_POR_CODIGO[c] for c in produtos_marcados if c in PRODUTOS_POR_CODIGO]
     equipe = json.loads(ordem["equipe_json"] or "[]")
     checklist_marcados = set(json.loads(ordem["checklist_json"] or "[]"))
 
     return render_template(
         "assinar_publico.html", ordem=ordem, servicos_detalhados=servicos_detalhados,
+        produtos_detalhados=produtos_detalhados,
         equipe=equipe, checklist_itens=CHECKLIST_ITENS, checklist_marcados=checklist_marcados,
     )
 

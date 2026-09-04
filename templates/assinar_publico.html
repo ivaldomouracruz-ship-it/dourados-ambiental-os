@@ -81,6 +81,20 @@
         </ul>
     </div>
 
+    {% if produtos_detalhados %}
+    <h2 class="secao-titulo" style="margin-top:18px;">Produtos químicos utilizados</h2>
+    <div class="bloco-secao">
+        <ul style="margin:0; padding-left:20px; font-size:0.88rem;">
+            {% for p in produtos_detalhados %}
+            <li style="margin-bottom:6px;">
+                <b>{{ p.principio_ativo }}</b> ({{ p.grupo_quimico }}) — {{ p.modo_aplicacao }}
+                <br><span style="color:#666; font-size:0.82rem;">Registro: {{ p.numero_registro }} &middot; Concentração: {{ p.concentracao }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
     {% if ordem.descricao_observacoes %}
     <h2 class="secao-titulo" style="margin-top:18px;">Observações</h2>
     <div class="bloco-secao">{{ ordem.descricao_observacoes }}</div>
